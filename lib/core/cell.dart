@@ -831,33 +831,88 @@ class SwipeActionCellState extends State<SwipeActionCell>
       ignoring: ignorePointer,
       child: SizeTransition(
         sizeFactor: deleteCurvedAnim,
-        child: RawGestureDetector(
-          behavior: HitTestBehavior.opaque,
-          gestures: gestures,
-          child: DecoratedBox(
-            position: DecorationPosition.foreground,
-            decoration: BoxDecoration(
-              color: selected
-                  ? (widget.selectedForegroundColor ??
-                      Colors.black.withAlpha(30))
-                  : Colors.transparent,
-            ),
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                width = constraints.maxWidth;
-                return Stack(
-                  alignment: Alignment.centerLeft,
-                  children: <Widget>[
-                    selectedButton,
-                    content,
-                    trailing,
-                    leading,
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
+        child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: editing && !editController.isAnimating ||
+                    currentOffset.dx != 0.0
+                ? () {
+                    if (editing && !editController.isAnimating) {
+                      assert(
+                          widget.index != null,
+                          "From SwipeActionCell:\nIf you want to enter edit mode,please pass the 'index' parameter in SwipeActionCell\n"
+                          "=====================================================================================\n"
+                          "如果你要进入编辑模式，请在SwipeActionCell中传入index 参数，他的值就是你列表组件的itemBuilder中返回的index即可");
+
+                      if (selected) {
+                        widget.controller?.selectedSet.remove(widget.index);
+                        _updateControllerSelectedIndexChangedCallback(
+                            selected: false);
+                      } else {
+                        widget.controller?.selectedSet.add(widget.index!);
+                        _updateControllerSelectedIndexChangedCallback(
+                            selected: true);
+                      }
+                      setState(() {});
+                    } else if (currentOffset.dx != 0 &&
+                        !controller.isAnimating) {
+                      closeWithAnim();
+                      _closeNestedAction();
+                    }
+                  }
+                : null,
+            onHorizontalDragStart: _onHorizontalDragStart,
+            onHorizontalDragUpdate: _onHorizontalDragUpdate,
+            onHorizontalDragEnd: _onHorizontalDragEnd,
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                color: selected
+                    ? (widget.selectedForegroundColor ??
+                        Colors.black.withAlpha(30))
+                    : Colors.transparent,
+              ),
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  width = constraints.maxWidth;
+                  return Stack(
+                    alignment: Alignment.centerLeft,
+                    children: <Widget>[
+                      selectedButton,
+                      content,
+                      trailing,
+                      leading,
+                    ],
+                  );
+                },
+              ),
+            )),
+        // RawGestureDetector(
+        //   behavior: HitTestBehavior.opaque,
+        //   gestures: gestures,
+        //   child: DecoratedBox(
+        //     position: DecorationPosition.foreground,
+        //     decoration: BoxDecoration(
+        //       color: selected
+        //           ? (widget.selectedForegroundColor ??
+        //               Colors.black.withAlpha(30))
+        //           : Colors.transparent,
+        //     ),
+        //     child: LayoutBuilder(
+        //       builder: (BuildContext context, BoxConstraints constraints) {
+        //         width = constraints.maxWidth;
+        //         return Stack(
+        //           alignment: Alignment.centerLeft,
+        //           children: <Widget>[
+        //             selectedButton,
+        //             content,
+        //             trailing,
+        //             leading,
+        //           ],
+        //         );
+        //       },
+        //     ),
+        //   ),
+        // ),
       ),
     );
   }
